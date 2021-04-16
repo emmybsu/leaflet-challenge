@@ -1,7 +1,7 @@
 // Creating map object
 var myMap = L.map("map", {
-  center: [40.7, -73.95],
-  zoom: 11
+  center: [38.8055, -123.0172],
+  zoom: 10
 });
 
 // Adding tile layer to the map
@@ -14,38 +14,106 @@ L.tileLayer("https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_toke
   accessToken: API_KEY
 }).addTo(myMap);
 
-// Store API query variables
-var baseURL = "https://data.cityofnewyork.us/resource/fhrw-4uyv.json?";
-var date = "$where=created_date between'2016-01-01T00:00:00' and '2017-01-01T00:00:00'";
-var complaint = "&complaint_type=Rodent";
-var limit = "&$limit=10000";
 
 // Assemble API query URL
-var url = baseURL + date + complaint + limit;
+var url = 'https://earthquake.usgs.gov/earthquakes/feed/v1.0/summary/all_week.geojson'
 
 // Grab the data with d3
 d3.json(url, function(response) {
 
-  // Create a new marker cluster group
-  var markers = L.markerClusterGroup();
+  // create features from the data
+  function createFeatures(feature){
+    return{
+      fillColor: chooseColor(feature.geometry.coordinates[2]),
+      color: "black",
+      radius: chosenRadius(feature.properties.mag),
+      stroke: true,
+      weight: 1.0,
+      opacity: 1,
+      fillOpacity: 1
+    };
 
-  // Loop through data
-  for (var i = 0; i < response.length; i++) {
-
-    // Set the data location property to a variable
-    var location = response[i].location;
-
-    // Check for location property
-    if (location) {
-
-      // Add a new marker to the cluster group and bind a pop-up
-      markers.addLayer(L.marker([location.coordinates[1], location.coordinates[0]])
-        .bindPopup(response[i].descriptor));
+    //setting the radius of magnitude
+    function chosenRadius(magnitude) {
+      return magnitude * 4;
     }
 
+    //setting the color according to the number of magnitude reported
+    function chooseColor(depth){
+      if (depth > 90) {
+        return '#ea2c2c';
+      } else if(depth > 70) {
+        return '#ea822c';        
+      } else if (depth > 50) {
+        return '#ea822c';
+      } else if (depth > 30) {
+        return 'ee9c00';
+      } else if (depth > 10) {
+        return '#d4ee00';
+      } else {
+        return '#98ee00';
+      }
+    }
+  
+    }
+
+    // add geoJSON layer to the map once the file is loaded
+
+L.geoJson(response, {
+  //turn each feature into a circleMarker on the map.
+  pointToLayer: function (feature, latlng) {
+    return L.circleMarker(latlng);
+  },
+  // set the style for each circle using the styleInfo function
+  style: createFeatures,
+
+  // create a popup for each marker to display the magnitude and location 
+  popUpFeature: function (feature, layer){
+    layer.bindPopUp(
+      'Magnitude:  '
+      + feature.properties.mag
+      + "<br>Depth: "
+      + feature.geometry.coordinates[2]
+      + "<br>Location:  "
+      + feature.properties.place
+    );
+
   }
+}).addTo(myMap);
 
-  // Add our marker cluster layer to the map
-  myMap.addLayer(markers);
+// create legend object
 
+var legend = L.control({
+  position: 'bottomright'
 });
+
+// details of the legend
+legend.onAdd = function () {
+  var div = L.DomUtil.create('div', 'info legend');
+
+  var grades = [-10, 10, 30, 50, 70, 90];
+
+  var colors = [
+    "#98ee00",
+    "#d4ee00",
+    "#eecc00",
+    "#ee9c00",
+    "#ea822c",
+    "#ea2c2c"
+
+  ];
+
+  // creating tool tip for each hurricane
+  for (var i = 0; i < grades.length; i++) {
+    div.innerHTML += "<i style = 'background: " + colors[i] + "'> </i> "
+    + grades[i] + (grades[i + 1] ? "&ndash;" + grades[i + 1] + "<br>" : "+");
+  }
+  return div;
+};
+
+// add legend to the map
+legend.addTo(myMap);
+
+})
+
+
