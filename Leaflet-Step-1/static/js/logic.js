@@ -1,7 +1,7 @@
 // Creating map object
 var myMap = L.map("map", {
-  center: [38.8055, -123.0172],
-  zoom: 10
+  center: [38.8055, -96.0172],
+  zoom: 5
 });
 
 // Adding tile layer to the map
@@ -24,6 +24,7 @@ d3.json(url, function(response) {
   // create features from the data
   function createFeatures(feature){
     return{
+      // check this line - feature.properties.mag?? row 28
       fillColor: chooseColor(feature.geometry.coordinates[2]),
       color: "black",
       radius: chosenRadius(feature.properties.mag),
@@ -34,11 +35,13 @@ d3.json(url, function(response) {
     };
 
     //setting the radius of magnitude
+
+    // check this row 54
     function chosenRadius(magnitude) {
       return magnitude * 4;
     }
 
-    //setting the color according to the number of magnitude reported
+    //setting the color according to the number of magnitude reported  row 28
     function chooseColor(depth){
       if (depth > 90) {
         return '#ea2c2c';
@@ -68,8 +71,11 @@ L.geoJson(response, {
   style: createFeatures,
 
   // create a popup for each marker to display the magnitude and location 
+  
+  
   popUpFeature: function (feature, layer){
     layer.bindPopUp(
+
       'Magnitude:  '
       + feature.properties.mag
       + "<br>Depth: "
@@ -103,7 +109,7 @@ legend.onAdd = function () {
 
   ];
 
-  // creating tool tip for each hurricane
+  // creating tool tip for each earthquake
   for (var i = 0; i < grades.length; i++) {
     div.innerHTML += "<i style = 'background: " + colors[i] + "'> </i> "
     + grades[i] + (grades[i + 1] ? "&ndash;" + grades[i + 1] + "<br>" : "+");
