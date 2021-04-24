@@ -70,11 +70,9 @@ L.geoJson(response, {
   // set the style for each circle using the styleInfo function
   style: createFeatures,
 
-  // create a popup for each marker to display the magnitude and location 
-  
-  
-  popUpFeature: function (feature, layer){
-    layer.bindPopUp(
+  // create a popup for each marker to display the magnitude and location     
+  onEachFeature: function (feature, layer){
+    layer.bindPopup(
 
       'Magnitude:  '
       + feature.properties.mag
